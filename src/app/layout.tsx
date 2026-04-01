@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter, Noto_Serif } from "next/font/google";
+
+export const dynamic = 'force-dynamic'
 import "./globals.css";
 import { createClient } from "@/lib/supabase/server";
 import { getUserMetaServer } from "@/lib/user-meta";

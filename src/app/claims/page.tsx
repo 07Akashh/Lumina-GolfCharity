@@ -1,5 +1,7 @@
 import React from 'react'
 import { createClient } from '@/lib/supabase/server'
+
+export const dynamic = 'force-dynamic'
 import { Trophy, ArrowRight, ShieldCheck, Clock, CheckCircle2, XCircle } from 'lucide-react'
 import Link from 'next/link'
 import { formatCurrency } from '@/lib/utils'
