@@ -1,5 +1,7 @@
 import { requireAuth } from "@/lib/supabase/server-utils";
 import { Suspense } from "react";
+
+export const dynamic = 'force-dynamic'
 import { 
   StatsSkeleton, 
   ChartSkeleton, 

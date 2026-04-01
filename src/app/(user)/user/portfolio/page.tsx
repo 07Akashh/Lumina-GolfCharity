@@ -1,5 +1,7 @@
 import { requireAuth } from "@/lib/supabase/server-utils";
 import { Suspense } from "react";
+
+export const dynamic = 'force-dynamic'
 import { PortfolioCSR } from "@/components/user/portfolio/PortfolioCSR";
 import { TableSkeleton, StatsSkeleton, RightPanelSkeleton } from "@/components/user/dashboard/DashboardSkeletons";
 
