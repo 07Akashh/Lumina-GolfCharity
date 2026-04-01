@@ -19,7 +19,7 @@ export default function NotFound() {
           <Link href="/" className="btn-primary px-8 py-3 text-sm">
             <ArrowLeft size={15} /> Back to Home
           </Link>
-          <Link href="/dashboard" className="btn-secondary px-8 py-3 text-sm">
+          <Link href="/user" className="btn-secondary px-8 py-3 text-sm">
             My Portfolio
           </Link>
         </div>
