@@ -61,7 +61,7 @@ export default function LandingPage() {
               Join the Legacy
             </Link>
             <Link
-              href="/draws"
+              href="/legacy"
               className="btn-secondary px-8 py-3.5 text-sm font-semibold"
             >
               View Prize Pool
