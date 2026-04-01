@@ -116,7 +116,7 @@ export default function LoginPage() {
              <div className="space-y-2">
                 <div className="flex justify-between items-center ml-1">
                    <label className="text-[10px] font-black uppercase tracking-widest text-[#3d4151] opacity-60">Security Key</label>
-                   <Link href="/forgot-password" disabled={pending} className={`text-[10px] font-black uppercase tracking-widest text-[#c81e51] hover:underline transition-all ${pending ? 'pointer-events-none opacity-50' : ''}`}>Forgot Key?</Link>
+                   <Link href="/forgot-password" className={`text-[10px] font-black uppercase tracking-widest text-[#c81e51] hover:underline transition-all ${pending ? 'pointer-events-none opacity-50' : ''}`}>Forgot Key?</Link>
                 </div>
                 <div className="relative group">
                    <div className="absolute left-5 top-1/2 -translate-y-1/2 text-[#8a8f9e] group-focus-within:text-[#c81e51] transition-colors"><Lock size={18} /></div>

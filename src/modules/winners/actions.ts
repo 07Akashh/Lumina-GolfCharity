@@ -3,7 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 
-export async function claimPrize(winnerId: string, proofUrl: string) {
+export async function submitWinnerProof(winnerId: string, proofUrl: string) {
     const supabase = createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -17,16 +17,16 @@ export async function claimPrize(winnerId: string, proofUrl: string) {
         .eq('user_id', user.id)
         .single()
 
-    if (!winner || winner.status !== 'won') {
-        return { error: 'Invalid claim state.' }
+    // Status 'pending' means the draw engine created the win but proof isn't uploaded yet.
+    if (!winner || winner.status !== 'pending') {
+        return { error: 'Invalid claim state. This prize may have already been claimed or verified.' }
     }
 
     const { error } = await supabase
         .from('winners')
         .update({ 
-            status: 'pending', // Awaiting verification
-            proof_url: proofUrl,
-            claimed_at: new Date().toISOString()
+            status: 'claimed', // Transition to claimed status for admin review
+            proof_url: proofUrl
         })
         .eq('id', winnerId)
 

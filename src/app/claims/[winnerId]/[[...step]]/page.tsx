@@ -12,11 +12,15 @@ export default async function ClaimPage({ params }: { params: Promise<{ winnerId
   // 1. Fetch Profile + KYC Status
   const { data: profile } = await supabase
     .from('profiles')
-    .select('id, full_name, role, phone, email, kyc_status, contribution_percentage')
+    .select('*')
     .eq('id', user.id)
     .single()
 
-  const isAdmin = profile?.role === 'ADMIN'
+  if (!profile) {
+    redirect('/user?error=profile_not_found')
+  }
+
+  const isAdmin = profile.role === 'ADMIN'
 
   // 2. Fetch KYC Record Node
   const { data: kycRecord } = await supabase

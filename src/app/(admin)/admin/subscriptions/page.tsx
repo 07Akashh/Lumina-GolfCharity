@@ -14,7 +14,7 @@ export default async function SubscriptionsPage() {
 
   const [{ data: subscriptions }, { data: profiles }] = await Promise.all([
     adminDb.from('subscriptions').select('*').order('created_at', { ascending: false }),
-    adminDb.from('profiles').select('id, full_name, email')
+    adminDb.from('profiles').select('*')
   ]);
   
   return (

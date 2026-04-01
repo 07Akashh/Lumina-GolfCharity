@@ -47,7 +47,7 @@ export interface Subscription {
   stripe_customer_id: string | null;
   stripe_subscription_id: string | null;
   status: SubscriptionStatus;
-  plan: 'monthly' | 'yearly' | 'free';
+  plan: 'monthly' | 'yearly' | 'free' | 'ethereal' | 'apex' | 'luminary';
   currency: string;
   current_period_end: string;
 }
