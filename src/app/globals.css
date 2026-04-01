@@ -1,26 +1,282 @@
 @import "tailwindcss";
 
+@theme {
+  /* Primary Brand Colors (from screenshots) */
+  --color-lumina-navy:   #0a1628;
+  --color-lumina-berry:  #c81e51;
+  --color-lumina-berry-light: #e2165f;
+  --color-lumina-emerald: #003731;
+  --color-lumina-emerald-mid: #1a5c52;
+
+  /* Surface Hierarchy (warm, NOT sterile white) */
+  --color-surface:             #faf9f7;
+  --color-surface-low:         #f4f3f1;
+  --color-surface-mid:         #eceae7;
+  --color-surface-high:        #e3e2e0;
+  --color-surface-highest:     #d8d6d3;
+
+  /* Text */
+  --color-ink:          #0a1628; /* Deep Navy */
+  --color-ink-mid:      #4a5568; /* Soft Slate */
+  --color-ink-muted:    #94a3b8; /* Muted Blue-Grey */
+
+  /* Card backgrounds for dashboard */
+  --color-card:         #ffffff;
+}
+
+/* ── Root ── */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: 250 249 247;
+  --foreground: 15 21 35;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+* {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+html {
+  scroll-behavior: smooth;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background-color: var(--color-surface);
+  color: var(--color-ink-mid);
+  font-family: 'Inter', system-ui, sans-serif;
+  font-size: 0.9375rem;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
+
+/* ── Typography Scale (from Design Spec) ── */
+.serif      { font-family: 'Noto Serif', Georgia, serif; }
+.serif-i    { font-family: 'Noto Serif', Georgia, serif; font-style: italic; }
+
+.display-xl {
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(2.2rem, 4vw, 3.2rem);
+  font-weight: 800;
+  line-height: 1.1;
+  letter-spacing: -0.04em;
+}
+
+.display-lg {
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(1.8rem, 3vw, 2.6rem);
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+}
+
+.display-md {
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(1.4rem, 2.5vw, 2.1rem);
+  font-weight: 800;
+  line-height: 1.2;
+  letter-spacing: -0.02em;
+}
+
+.display-sm {
+  font-family: 'Noto Serif', serif;
+  font-size: clamp(1.1rem, 1.8vw, 1.5rem);
+  font-weight: 800;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+}
+
+/* ── Glass Crystal (Navbar & Floaters) ── */
+.glass-crystal {
+  background: rgba(250, 249, 247, 0.82);
+  backdrop-filter: blur(20px) saturate(180%);
+  -webkit-backdrop-filter: blur(20px) saturate(180%);
+  border-top:   1px solid rgba(255, 255, 255, 0.6);
+  border-left:  1px solid rgba(255, 255, 255, 0.4);
+  border-right: 1px solid rgba(0, 0, 0, 0.04);
+  border-bottom:1px solid rgba(0, 0, 0, 0.04);
+}
+
+/* Card with tonal lift (no shadow) */
+.card-lumina {
+  background-color: #ffffff;
+  border-radius: 1.25rem;
+  border: none;
+  box-shadow: 0 1px 3px rgba(15, 21, 35, 0.04),
+              0 8px 24px rgba(15, 21, 35, 0.05);
+}
+
+/* Tinted dark card (emerald / navy) */
+.card-dark {
+  background-color: var(--color-lumina-navy);
+  border-radius: 1.25rem;
+  border: none;
+  box-shadow: 0 8px 32px rgba(10, 22, 40, 0.2);
+}
+
+.card-emerald {
+  background-color: var(--color-lumina-emerald);
+  border-radius: 1.25rem;
+  border: none;
+  box-shadow: 0 8px 32px rgba(0, 55, 49, 0.3);
+}
+
+/* ── Buttons ── */
+.btn-primary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.75rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: 0.88rem;
+  border-radius: 9999px;
+  background: linear-gradient(135deg, #c81e51 0%, #e2165f 100%);
+  color: #ffffff;
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  white-space: nowrap;
+}
+
+.btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 12px 30px -8px rgba(200, 30, 81, 0.4);
+  filter: brightness(1.06);
+}
+
+.btn-primary:active {
+  transform: translateY(0);
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.75rem;
+  font-family: 'Inter', sans-serif;
+  font-weight: 600;
+  font-size: 0.88rem;
+  border-radius: 9999px;
+  background-color: var(--color-surface-high);
+  color: var(--color-ink);
+  border: none;
+  cursor: pointer;
+  transition: all 0.25s;
+}
+
+.btn-secondary:hover {
+  background-color: var(--color-surface-highest);
+}
+
+/* ── Sidebar nav item ── */
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  border-radius: 0.75rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-ink-mid);
+  cursor: pointer;
+  transition: all 0.2s;
+  text-decoration: none;
+}
+
+.nav-item:hover {
+  background-color: var(--color-surface-low);
+  color: var(--color-ink);
+}
+
+.nav-item.active {
+  background-color: var(--color-surface-low);
+  color: var(--color-lumina-berry);
+}
+
+.nav-item.active svg {
+  color: var(--color-lumina-berry);
+}
+
+/* ── Status pill ── */
+.pill-active {
+  background-color: #dcfce7;
+  color: #15803d;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+}
+
+.pill-pending {
+  background-color: #fef9c3;
+  color: #a16207;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  padding: 0.2rem 0.65rem;
+  border-radius: 9999px;
+}
+
+/* ── Input ── */
+.input-lumina {
+  width: 100%;
+  background: #fcfbf9;
+  border: 1.5px solid #f4f3f1;
+  border-radius: 1rem;
+  padding: 0.9rem 1.15rem 0.9rem 2.7rem !important;
+  font-family: var(--font-inter), sans-serif;
+  font-size: 0.92rem;
+  font-weight: 500;
+  color: var(--color-ink);
+  outline: none;
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.input-lumina::placeholder {
+  color: var(--color-ink-muted);
+}
+
+.input-lumina:focus {
+  border-color: var(--color-lumina-berry);
+  background: #ffffff;
+  box-shadow: 0 0 0 3px rgba(200, 30, 81, 0.08);
+}
+
+/* ── Footer footer-lumina ── */
+.footer-lumina {
+  background-color: var(--color-surface-low);
+  border-top: none;
+}
+
+/* ── Draw number ball ── */
+.draw-ball {
+  width: 3rem;
+  height: 3rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 1rem;
+  background-color: var(--color-surface-mid);
+  color: var(--color-ink);
+  transition: all 0.2s;
+}
+
+.draw-ball.selected {
+  background-color: var(--color-lumina-navy);
+  color: #ffffff;
+}
+
+.draw-ball.berry {
+  background-color: var(--color-lumina-berry);
+  color: #ffffff;
+}
+
+/* ── Scrollbar ── */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--color-surface-high); border-radius: 99px; }
