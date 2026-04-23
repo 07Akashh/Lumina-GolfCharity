@@ -76,7 +76,7 @@ export default function LandingPage() {
             <div className="flex -space-x-2">
               {[1, 2, 3, 4, 5].map((i) => (
                 <div key={i} className="w-8 h-8 rounded-full bg-[#eceae7] border-2 border-white overflow-hidden relative">
-                  <Image src={`https://i.pravatar.cc/80?u=lumina${i}`} alt="" fill className="object-cover" />
+                  <Image src={`https://i.pravatar.cc/80?u=lumina${i}`} alt="" fill sizes="40px" className="object-cover" />
                 </div>
               ))}
             </div>
@@ -97,6 +97,7 @@ export default function LandingPage() {
             src="https://images.unsplash.com/photo-1541233349642-6e425fe6190e?auto=format&fit=crop&q=80&w=1200"
             alt="Lumina philanthropy"
             fill
+            sizes="(max-width: 1024px) 100vw, 50vw"
             priority
             className="object-cover opacity-50 scale-105"
           />
@@ -175,7 +176,7 @@ export default function LandingPage() {
               <div className="flex -space-x-3">
                 {[1, 2, 3, 4].map((i) => (
                   <div key={i} className="w-10 h-10 rounded-full border-[3px] border-[#eceae7] overflow-hidden bg-[#d8d6d3] relative">
-                    <Image src={`https://i.pravatar.cc/80?u=pool${i}`} alt="" fill className="object-cover" />
+                    <Image src={`https://i.pravatar.cc/80?u=pool${i}`} alt="" fill sizes="40px" className="object-cover" />
                   </div>
                 ))}
                 <div className="w-10 h-10 rounded-full border-[3px] border-[#eceae7] bg-[#c81e51] flex items-center justify-center text-[9px] font-black text-white">

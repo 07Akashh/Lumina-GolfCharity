@@ -146,6 +146,7 @@ export default function Impact() {
                         src={ch.image_url}
                         alt={ch.name}
                         fill
+                        sizes="(max-width: 768px) 100vw, 150px"
                         className="object-contain p-2"
                       />
                     ) : (

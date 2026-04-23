@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 };
 
 import { Providers } from "@/components/Providers";
+import { GlobalLoader } from "@/components/common/GlobalLoader";
 
 export default async function RootLayout({
   children,
@@ -42,6 +43,7 @@ export default async function RootLayout({
         suppressHydrationWarning
       >
         <Providers>
+          <GlobalLoader />
           <ProfileHydrator meta={meta} />
           <main>{children}</main>
         </Providers>

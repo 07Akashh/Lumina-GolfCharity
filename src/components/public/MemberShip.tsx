@@ -154,7 +154,7 @@ export default function Memberships() {
                 <div key={ch.id} className="card-lumina p-8 text-center space-y-4 group hover:-translate-y-1 transition-all duration-500">
                   <div className="w-16 h-16 rounded-2xl bg-[#fafafc] border border-[#f4f3f1] flex items-center justify-center mx-auto transition-all group-hover:scale-105 group-hover:border-[#c81e51]/20 overflow-hidden relative">
                     {ch.image_url ? (
-                      <Image src={ch.image_url} alt={ch.name} fill className="object-cover" />
+                      <Image src={ch.image_url} alt={ch.name} fill sizes="64px" className="object-cover" />
                     ) : (
                       <Heart size={20} className="text-[#c81e51]" />
                     )}
