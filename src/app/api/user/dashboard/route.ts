@@ -158,8 +158,16 @@ export async function GET() {
     type JoinedProfile = { contribution_percentage?: number } & { charities?: { name: string } | null };
     const pd = profile as JoinedProfile;
 
+    // Merged data for Bio fallback (since column is missing)
+    const { data: authUser } = await adminClient.auth.admin.getUserById(user.id)
+    const mergedProfile = {
+      ...profile,
+      bio: profile?.bio || authUser?.user?.user_metadata?.bio || '',
+      phone: profile?.phone || authUser?.user?.user_metadata?.phone || ''
+    }
+
     return NextResponse.json({
-      profile,
+      profile: mergedProfile,
       subscription,
       totalWon,
       charities: [pd?.charities].filter(Boolean),

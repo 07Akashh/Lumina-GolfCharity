@@ -192,11 +192,20 @@ export async function updateProfile(formData: FormData) {
       updated_at: new Date().toISOString(),
       full_name: fullName,
       phone: phone || undefined,
-      contribution_percentage: charityPercent,
-      bio: bio || undefined
+      contribution_percentage: charityPercent
     }
 
-    await supabase.from('profiles').update(updates).eq('id', user.id)
+    // Attempt DB update
+    const { error: updateError } = await supabase.from('profiles').update(updates).eq('id', user.id)
+    if (updateError) {
+      console.warn('⚠️ Standard Profile Update Warning (expected if columns missing):', updateError.message)
+      // We continue because we already saved the crucial bits to Auth Metadata above
+    }
+
+    // Try updating bio separately so it doesn't block the whole save if column is missing
+    if (bio) {
+      await supabase.from('profiles').update({ bio }).eq('id', user.id)
+    }
   }
 
   // SYNC COOKIE
