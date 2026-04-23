@@ -1,7 +1,7 @@
 'use client'
-
-import React, { useState } from 'react'
+import React from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import { motion } from 'framer-motion'
 import {
   Heart,
@@ -75,8 +75,8 @@ export default function LandingPage() {
           >
             <div className="flex -space-x-2">
               {[1, 2, 3, 4, 5].map((i) => (
-                <div key={i} className="w-8 h-8 rounded-full bg-[#eceae7] border-2 border-white overflow-hidden">
-                  <img src={`https://i.pravatar.cc/80?u=lumina${i}`} alt="" className="w-full h-full object-cover" />
+                <div key={i} className="w-8 h-8 rounded-full bg-[#eceae7] border-2 border-white overflow-hidden relative">
+                  <Image src={`https://i.pravatar.cc/80?u=lumina${i}`} alt="" fill className="object-cover" />
                 </div>
               ))}
             </div>
@@ -93,10 +93,12 @@ export default function LandingPage() {
           transition={{ duration: 1, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
           className="relative overflow-hidden bg-[#0a1628] min-h-[560px] lg:min-h-0"
         >
-          <img
+          <Image
             src="https://images.unsplash.com/photo-1541233349642-6e425fe6190e?auto=format&fit=crop&q=80&w=1200"
             alt="Lumina philanthropy"
-            className="absolute inset-0 w-full h-full object-cover opacity-50 scale-105"
+            fill
+            priority
+            className="object-cover opacity-50 scale-105"
           />
           <div className="absolute inset-0 bg-gradient-to-br from-[#0a1628]/60 to-transparent" />
 
@@ -172,8 +174,8 @@ export default function LandingPage() {
             <div className="flex items-center gap-4">
               <div className="flex -space-x-3">
                 {[1, 2, 3, 4].map((i) => (
-                  <div key={i} className="w-10 h-10 rounded-full border-[3px] border-[#eceae7] overflow-hidden bg-[#d8d6d3]">
-                    <img src={`https://i.pravatar.cc/80?u=pool${i}`} alt="" className="w-full h-full object-cover" />
+                  <div key={i} className="w-10 h-10 rounded-full border-[3px] border-[#eceae7] overflow-hidden bg-[#d8d6d3] relative">
+                    <Image src={`https://i.pravatar.cc/80?u=pool${i}`} alt="" fill className="object-cover" />
                   </div>
                 ))}
                 <div className="w-10 h-10 rounded-full border-[3px] border-[#eceae7] bg-[#c81e51] flex items-center justify-center text-[9px] font-black text-white">
