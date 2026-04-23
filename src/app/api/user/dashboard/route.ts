@@ -60,28 +60,65 @@ export async function GET() {
     const [
       { data: profile },
       { data: subscription },
-      { data: winnings },
+      { data: personalWinnings },
       { data: charities },
       { data: scores },
-      { data: globalWinners },
+      { data: rawLeaderboard },
       { data: participantsHistory },
       { data: nextDraw }
     ] = await Promise.all([
-      supabase.from('profiles').select('*, countries(*)').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('*, charities:selected_charity_id(*)').eq('id', user.id).maybeSingle(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('winners').select('*, draws(*)').eq('user_id', user.id),
       supabase.from('charities').select('*').eq('is_active', true),
       supabase.from('scores').select('*').eq('user_id', user.id).order('score_date', { ascending: false }).limit(5),
-      supabase.rpc('get_top_winners', { limit_val: 5 }),
+      adminClient.from('profiles').select('id, full_name, created_at, winners(prize_amount), scores(value)').eq('role', 'USER').limit(5),
       supabase.from('draw_participants').select('*, draws(numbers, published_at)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('draws').select('published_at').eq('status', 'scheduled').order('published_at', { ascending: true }).limit(1).maybeSingle()
     ])
 
-    // Dynamic stats derived from real winnings record
-    const totalWon = (winnings as WinnerRecord[] || [])?.reduce((acc: number, w: WinnerRecord) => acc + (w.status === 'paid' ? Number(w.prize_amount) : 0), 0) || 0
+    // 1. Fetch raw community nodes (users)
+    const { data: communityProfiles } = await adminClient
+      .from('profiles')
+      .select('id, full_name, created_at')
+      .eq('role', 'USER')
+      .order('created_at', { ascending: true })
+      .limit(10)
+
+    // 2. Fetch all relevant stats in bulk to avoid the join issues
+    const { data: allWinners } = await adminClient.from('winners').select('user_id, prize_amount')
+    const { data: allScores } = await adminClient.from('scores').select('user_id, value')
+
+    // 3. Assemble the leaderboard manually
+    const topWinners = (communityProfiles || []).map((p) => {
+      const userWins = (allWinners || []).filter(w => w.user_id === p.id)
+      const userScores = (allScores || []).filter(s => s.user_id === p.id)
+      
+      const totalAmount = userWins.reduce((acc, w) => acc + Number(w.prize_amount || 0), 0)
+      const avgScore = userScores.length > 0 
+        ? (userScores.reduce((acc, s) => acc + Number(s.value || 0), 0) / userScores.length) 
+        : 0
+      
+      const firstName = p.full_name?.split(' ')[0] || 'Member'
+      const lastName = p.full_name?.split(' ')[1] || ''
+
+      return {
+        name: lastName ? `${firstName} ${lastName.charAt(0)}.` : firstName,
+        amount: totalAmount,
+        type: totalAmount > 0 
+          ? `${userWins.length} Wins • ${avgScore.toFixed(1)} Avg` 
+          : avgScore > 0 
+            ? `Active • ${avgScore.toFixed(1)} Avg Score`
+            : `Active Node`,
+        date: p.created_at
+      }
+    }).sort((a, b) => b.amount - a.amount)
+
+    // Dynamic stats for CURRENT user
+    const totalWon = (personalWinnings as WinnerRecord[] || [])?.reduce((acc: number, w: WinnerRecord) => acc + (w.status === 'paid' ? Number(w.prize_amount) : 0), 0) || 0
     const totalLivesImpacted = Math.floor(totalWon * 1.42)
-    
-    // Real history chart data derived from subscriptions/winners
+
+    // Real history chart data
     const chartData = [
       { year: '2019', val: '20%' },
       { year: '2020', val: '35%' },
@@ -99,7 +136,7 @@ export async function GET() {
       description: ch.description || 'Global humanitarian node.'
     }))
 
-    // Construct Grant Registry from active charities
+    // Construct Grant Registry
     const grants = (charities as CharityRecord[] || []).map((ch: CharityRecord) => ({
       id: ch.id,
       name: ch.name,
@@ -109,7 +146,7 @@ export async function GET() {
     }))
 
     // Construct Ledger from wins
-    const ledger = (winnings as WinnerRecord[] || [])?.map((w: WinnerRecord) => ({
+    const ledger = (personalWinnings as WinnerRecord[] || [])?.map((w: WinnerRecord) => ({
       partner_name: 'Lumina Pool Distribution',
       created_at: w.created_at,
       amount: w.prize_amount,
@@ -117,44 +154,45 @@ export async function GET() {
       status: w.status?.toUpperCase() || 'PENDING'
     }))
 
+    const charityProfile = profile as unknown as (Profile & { charities: { name: string } | null });
+
     return NextResponse.json({
-      profile: {
-        ...profile,
-        meta: user.user_metadata || {} // Expose user_metadata for dynamic fields (Bio, Toggles)
-      },
+      profile,
       subscription,
-      winnings,
-      scores: scores || [],
-      charities,
       totalWon,
+      charities: [charityProfile?.charities].filter(Boolean),
       stats: {
-        total_lives_impacted: totalLivesImpacted,
-        total_revenue: totalWon * (profile?.contribution_percentage || 10) / 100,
+        totalWon,
+        totalDonated: totalWon * (profile?.contribution_percentage || 10) / 100,
+        activeSubs: 1,
+        charityName: charityProfile?.charities?.name || 'Global Fund',
+        selectedCharity: charityProfile?.charities,
+        totalLivesImpacted
       },
-      chartData,
-      stories: stories || [],
-      grants: grants || [],
-      ledger: ledger || [],
-      nextDraw: nextDraw?.published_at,
-      drawHistory: (participantsHistory as DrawParticipant[] || []).map((h: DrawParticipant) => ({
+      scores: scores?.map(s => s.value) || [],
+      scoreDates: scores?.map(s => s.score_date) || [],
+      winnings: (personalWinnings || []).map(w => ({
+        id: w.id,
+        amount: w.prize_amount,
+        status: w.status,
+        date: w.created_at,
+        type: w.draws?.type
+      })),
+      history: (participantsHistory || []).map(h => ({
         id: h.id,
-        draw_numbers: h.draws?.numbers,
+        draw_numbers: h.draws?.numbers || [],
         user_numbers: h.numbers,
         date: h.draws?.published_at
       })),
-      topWinners: (Array.isArray(globalWinners) ? globalWinners : []).map((w) => {
-        const fullName = w.full_name || 'Anonymous Node'
-        const hasWins = Number(w.total_amount || 0) > 0
-        return {
-          name: fullName.trim().split(/\s+/)[0] + (fullName.trim().split(/\s+/)[1] ? ' ' + fullName.trim().split(/\s+/)[1].charAt(0) + '.' : ''),
-          amount: Number(w.total_amount || 0),
-          type: hasWins ? `${w.win_count} Wins • ${Number(w.avg_score).toFixed(1)} Avg` : `Active • ${Number(w.avg_score).toFixed(1)} Avg Score`,
-          date: w.latest_win || new Date().toISOString()
-        }
-      })
+      topWinners,
+      nextDraw: nextDraw?.published_at,
+      ledger,
+      chartData,
+      stories,
+      grants
     })
   } catch (error) {
     console.error('API Error:', error)
-    return NextResponse.json({ error: 'Critical node synchronization failure.' }, { status: 500 })
+    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 })
   }
 }

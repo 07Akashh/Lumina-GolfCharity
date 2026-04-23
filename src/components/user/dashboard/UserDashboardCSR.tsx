@@ -110,12 +110,12 @@ export function UserDashboardCSR() {
         {/* 1. Header & Claims Portal Hub */}
         <DashboardHeader 
           userName={data?.profile?.full_name} 
-          livesImpacted={data?.stats?.total_lives_impacted}
+          livesImpacted={data?.stats?.totalLivesImpacted}
           activeWinnings={data?.winnings}
         />
         
         {/* 2. Hero Summary Matrix */}
-        <HeroStats totalWon={data?.totalWon} />
+        <HeroStats totalWon={data?.stats?.totalWon || data?.totalWon} />
 
         {/* 3. Global Award Notifications */}
         <WinnerNotification activeWinnings={data?.winnings} />
@@ -123,9 +123,6 @@ export function UserDashboardCSR() {
         {/* 4. Core Operational Matrix */}
         <div className="grid lg:grid-cols-3 gap-10">
            <div className="lg:col-span-2 space-y-10">
-              {/* Performance Node Graph */}
-              {/* <HandicapProgress /> */}
-
               {/* Verified Network Yields */}
               <TopWinnersLeaderboard winners={data?.topWinners} />
            </div>
@@ -136,10 +133,10 @@ export function UserDashboardCSR() {
 
               {/* Impact & Philanthropy Selection */}
               <ImpactMatrix 
-                charityId={data?.profile?.charity_id}
-                charityName={data?.charities?.find(c => c.id === data?.profile?.charity_id)?.name}
+                charityId={data?.stats?.selectedCharity?.id}
+                charityName={data?.stats?.charityName}
                 percentage={data?.profile?.contribution_percentage}
-                charities={data?.charities}
+                charities={data?.charities && data.charities.length > 0 ? data.charities : []}
               />
            </div>
         </div>

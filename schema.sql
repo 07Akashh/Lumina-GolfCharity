@@ -363,26 +363,19 @@ returns table (
 ) as $$
 begin
   return query
-  with user_wins as (
-    select w.user_id, sum(w.prize_amount) as total, count(w.id) as wins, max(w.created_at) as last_w
-    from public.winners w group by w.user_id
-  ),
-  user_scores as (
-    select s.user_id, avg(s.value) as average
-    from public.scores s group by s.user_id
-  )
   select 
     p.id as user_id,
     coalesce(p.full_name, 'Anonymous Node')::text as full_name,
-    coalesce(uw.total, 0)::numeric as total_amount,
-    coalesce(uw.wins, 0)::bigint as win_count,
-    coalesce(us.average, 0)::numeric as avg_score,
-    uw.last_w as latest_win
+    coalesce(sum(w.prize_amount), 0)::numeric as total_amount,
+    count(distinct w.id)::bigint as win_count,
+    coalesce(avg(s.value), 0)::numeric as avg_score,
+    max(w.created_at) as latest_win
   from public.profiles p
-  left join user_wins uw on uw.user_id = p.id
-  left join user_scores us on us.user_id = p.id
+  left join public.winners w on w.user_id = p.id
+  left join public.scores s on s.user_id = p.id
   where p.role = 'USER'
-  order by total_amount desc, avg_score desc
+  group by p.id, p.full_name
+  order by total_amount desc, avg_score desc, p.id asc
   limit limit_val;
 end;
 $$ language plpgsql security definer;
