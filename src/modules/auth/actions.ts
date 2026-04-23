@@ -1,7 +1,6 @@
 'use server'
 
-import { createClient } from '@/lib/supabase/server'
-import { createClient as createAdminClient } from '@supabase/supabase-js'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -167,10 +166,7 @@ export async function updateProfile(formData: FormData) {
   
   if (!existingProfile) {
     // Self-heal: Create the missing profile node
-    const adminDb = createAdminClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!, 
-      process.env.SUPABASE_SERVICE_ROLE_KEY!
-    )
+    const adminDb = createAdminClient()
     
     await adminDb.from('profiles').insert({
       id: user.id,
@@ -215,7 +211,8 @@ export async function updateProfile(formData: FormData) {
       name: profile.full_name || 'Philanthropist',
       role: profile.role || 'MEMBER',
       avatar: profile.avatar_url || undefined,
-      isActive: (profile.subscriptions as { status: string } | null)?.status === 'active'
+      isActive: (profile.subscriptions as { status: string } | null)?.status === 'active',
+      contributionPercentage: profile.contribution_percentage
     })
   }
 

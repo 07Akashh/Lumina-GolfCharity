@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import { Profile } from '@/types'
+import { Profile } from '@/types/dashboard'
 import { UserMeta } from '@/lib/user-meta'
 
 interface UserState {

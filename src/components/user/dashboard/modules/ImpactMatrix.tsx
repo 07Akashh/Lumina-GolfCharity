@@ -6,16 +6,13 @@ import Image from 'next/image'
 import { updateContributionPercentage, updateSelectedCharity } from '@/modules/user/actions'
 import { useQueryClient } from '@tanstack/react-query'
 
+import { CharityNode } from '@/types/dashboard'
+
 interface ImpactMatrixProps {
   charityId?: string;
   charityName?: string;
   percentage?: number;
-  charities?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    image_url?: string;
-  }>;
+  charities?: CharityNode[];
 }
 
 export function ImpactMatrix({ charityId, charityName, percentage, charities }: ImpactMatrixProps) {
@@ -95,12 +92,7 @@ import { DEFAULT_CHARITY_COVER } from '@/components/Layouts/DashboardLayout'
 function CharityModal({ isOpen, onClose, charities, selectedId }: {
   isOpen: boolean; 
   onClose: () => void; 
-  charities: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    image_url?: string;
-  }>; 
+  charities: CharityNode[]; 
   selectedId?: string;
 }) {
   const [loadingId, setLoadingId] = React.useState<string | null>(null)

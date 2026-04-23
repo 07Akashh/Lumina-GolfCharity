@@ -3,14 +3,10 @@
 import React from 'react'
 import Image from 'next/image'
 
-interface Story {
-  category?: string;
-  image_url?: string;
-  title?: string;
-}
+import { DashboardData } from '@/types/dashboard'
 
 interface ImpactStoriesProps {
-  stories?: Story[];
+  stories?: DashboardData['stories'];
 }
 
 export function ImpactStories({ stories }: ImpactStoriesProps) {

@@ -1,7 +1,10 @@
 'use client'
 
 import React from 'react'
+import { motion, AnimatePresence } from 'framer-motion'
 import { useApiQuery } from '@/lib/api-client'
+import { DashboardData } from '@/types/dashboard'
+import { useUserStore } from '@/store/use-user-store'
 import { StatsSkeleton, ChartSkeleton, RightPanelSkeleton } from './DashboardSkeletons'
 
 // Modular Components
@@ -13,56 +16,6 @@ import { NodeConsole } from './modules/NodeConsole'
 import { ImpactMatrix } from './modules/ImpactMatrix'
 import { TopWinnersLeaderboard } from './modules/TopWinnersLeaderboard'
 import { ImpactStories } from './modules/ImpactStories'
-
-interface DashboardData {
-  totalWon?: number;
-  profile?: {
-    full_name?: string;
-    charity_id?: string;
-    contribution_percentage?: number;
-  };
-  stats?: {
-    totalWon?: number;
-    totalLivesImpacted?: number;
-    charityName?: string;
-    selectedCharity?: {
-      id: string;
-      name: string;
-      description?: string;
-      image_url?: string;
-    };
-  };
-  winnings?: Array<{
-    id: string;
-    status: string;
-    prize_amount: number;
-    draws?: {
-      type: string;
-    };
-  }>;
-  stories?: Array<{
-    category?: string;
-    image_url?: string;
-    title?: string;
-  }>;
-  scores?: Array<{ value: number; id: string }>;
-  charities?: Array<{
-    id: string;
-    name: string;
-    description?: string;
-    image_url?: string;
-  }>;
-  topWinners?: Array<{
-    name: string;
-    amount: number;
-    type: string;
-    date: string;
-  }>;
-}
-
-import { motion, AnimatePresence } from 'framer-motion'
-
-import { useUserStore } from '@/store/use-user-store'
 
 export function UserDashboardCSR() {
   const { data, isLoading: loading, error } = useApiQuery<DashboardData>('/user/dashboard')
@@ -119,13 +72,13 @@ export function UserDashboardCSR() {
       >
         {/* 1. Header & Claims Portal Hub */}
         <DashboardHeader 
-          userName={data?.profile?.full_name} 
+          userName={data?.profile?.full_name ?? undefined} 
           livesImpacted={data?.stats?.totalLivesImpacted}
           activeWinnings={data?.winnings}
         />
         
         {/* 2. Hero Summary Matrix */}
-        <HeroStats totalWon={data?.stats?.totalWon || data?.totalWon} />
+        <HeroStats totalWon={data?.stats?.totalWon || 0} />
 
         {/* 3. Global Award Notifications */}
         <WinnerNotification activeWinnings={data?.winnings} />

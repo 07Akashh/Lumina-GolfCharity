@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react'
 import { Save, User, Camera, Bell, Award, Loader2, Lock, Smartphone, Fingerprint, LogOut } from 'lucide-react'
+import { DashboardData, Profile } from '@/types/dashboard'
 import { useApi } from '@/lib/api-client'
 import { SettingsSkeleton } from '@/components/user/dashboard/DashboardSkeletons'
 import { updateProfile, logout } from '@/modules/auth/actions'
@@ -14,27 +15,9 @@ const TABS = [
   { id: 'security', label: 'Security & Privacy', icon: Lock },
 ]
 
-interface SettingsData {
-  profile?: {
-    id?: string;
-    full_name?: string;
-    email?: string;
-    avatar_url?: string;
-    role?: string;
-    bio?: string;
-    phone?: string;
-    contribution_percentage?: number;
-    comm_alerts?: boolean;
-    comm_weekly?: boolean;
-    comm_network?: boolean;
-  };
-  subscription?: {
-    plan?: string;
-  };
-}
 
 export function SettingsCSR() {
-  const { data, loading, error } = useApi<SettingsData>('/user/dashboard')
+  const { data, loading, error } = useApi<DashboardData>('/user/dashboard')
   const [activeTab, setActiveTab] = useState('profile')
   const [updating, setUpdating] = useState(false)
   const [msg, setMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null)
@@ -70,7 +53,7 @@ export function SettingsCSR() {
   if (error) return <p className="p-8 text-center text-red-500 font-bold">Failed to synchronize governance node.</p>
 
   const profile = data?.profile
-  const plan = data?.subscription?.plan || 'free'
+  const plan = data?.planId || data?.subscription?.plan || 'free'
 
   const handleUpdate = async (formDataPayload: FormData) => {
     setUpdating(true)
@@ -142,7 +125,7 @@ export function SettingsCSR() {
             {/* USE KEY PATTERN TO INITIALIZE FORM WITHOUT EFFECTS */}
             <ProfileIdentityForm 
               key={profile?.id || 'empty'}
-              profile={profile} 
+              profile={profile ?? undefined} 
               updating={updating}
               msg={msg}
               onUpdate={handleUpdate}
@@ -164,7 +147,7 @@ export function SettingsCSR() {
 }
 
 function ProfileIdentityForm({ profile, updating, msg, onUpdate }: {
-  profile: SettingsData['profile'];
+  profile: Profile | undefined;
   updating: boolean;
   msg: { type: 'success' | 'error', text: string } | null;
   onUpdate: (fd: FormData) => void;

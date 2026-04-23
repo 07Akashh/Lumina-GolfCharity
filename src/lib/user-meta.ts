@@ -6,6 +6,7 @@ export interface UserMeta {
   avatar?: string;
   isActive: boolean;
   livesImpacted?: number;
+  contributionPercentage?: number;
 }
 
 const COOKIE_NAME = 'lumina_user_meta'

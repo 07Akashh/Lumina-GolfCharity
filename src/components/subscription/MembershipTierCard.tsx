@@ -22,14 +22,24 @@ interface TierProps {
 
 export function MembershipTierCard({ tier, isCurrent, isGuest }: TierProps) {
   const [loading, setLoading] = React.useState(false)
+  const [error, setError] = React.useState<string | null>(null)
 
   const handleSelect = async () => {
     if (!tier.priceId) return
     setLoading(true)
+    setError(null)
     try {
-      await createCheckoutSession(tier.priceId)
-    } catch (error) {
-      console.error(error)
+      const result = await createCheckoutSession(tier.priceId)
+      // If we get here without redirect, it means an error was returned
+      if (result && 'error' in result) {
+        setError(result.error)
+        setLoading(false)
+      }
+      // If redirect() was called, execution stops — no need to handle success
+    } catch {
+      // NEXT_REDIRECT is thrown as a special error — do not catch it
+      // Any real unexpected error:
+      setError('Unexpected error. Please try again.')
       setLoading(false)
     }
   }
@@ -77,17 +87,22 @@ export function MembershipTierCard({ tier, isCurrent, isGuest }: TierProps) {
           ✓ Your Current Plan
         </div>
       ) : tier.priceId ? (
-        <LoadingButton
-          loading={loading}
-          onClick={handleSelect}
-          className={`w-full py-3.5 rounded-full text-sm font-bold transition-all ${
-            tier.highlighted
-              ? 'bg-[#c81e51] text-white'
-              : 'bg-[#0a1628] text-white'
-          }`}
-        >
-          {isGuest ? 'Sign up to Join' : (tier.highlighted ? `Join ${tier.title}` : 'Select Tier')} <ArrowRight size={15} className="inline ml-1" />
-        </LoadingButton>
+        <div className="space-y-2">
+          <LoadingButton
+            loading={loading}
+            onClick={handleSelect}
+            className={`w-full py-3.5 rounded-full text-sm font-bold transition-all ${
+              tier.highlighted
+                ? 'bg-[#c81e51] text-white'
+                : 'bg-[#0a1628] text-white'
+            }`}
+          >
+            {isGuest ? 'Sign up to Join' : (tier.highlighted ? `Join ${tier.title}` : 'Select Tier')} <ArrowRight size={15} className="inline ml-1" />
+          </LoadingButton>
+          {error && (
+            <p className="text-[10px] font-bold text-red-600 text-center pt-1">{error}</p>
+          )}
+        </div>
       ) : (
         <a
           href="mailto:concierge@lumina.co"

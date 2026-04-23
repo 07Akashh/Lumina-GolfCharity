@@ -6,24 +6,10 @@ import { LoadingButton } from '@/components/common/LoadingButton'
 import { StatsSkeleton, ChartSkeleton, ImpactGridSkeleton } from '@/components/user/dashboard/DashboardSkeletons'
 import { formatCurrency } from '@/lib/utils'
 
-interface MetricsData {
-  totalWon?: number;
-  stats?: {
-    totalWon?: number;
-    totalLivesImpacted?: number;
-  };
-  chartData?: Array<{ year: string; val: string; active?: boolean }>;
-  grants?: Array<{
-    id: string;
-    name: string;
-    region: string;
-    lives_impacted: number;
-    status: string;
-  }>;
-}
+import { DashboardData } from '@/types/dashboard'
 
 export function MetricsCSR() {
-  const { data, loading, error } = useApi<MetricsData>('/user/dashboard')
+  const { data, loading, error } = useApi<DashboardData>('/user/dashboard')
 
   if (loading) {
     return (
@@ -56,7 +42,7 @@ export function MetricsCSR() {
     )
   }
 
-  const totalWon = data?.stats?.totalWon || data?.totalWon || 0
+  const totalWon = data?.stats?.totalWon || 0
   const livesImpacted = data?.stats?.totalLivesImpacted || 0
 
   return (

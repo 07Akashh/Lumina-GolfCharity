@@ -11,6 +11,7 @@ function PurchaseContent() {
   const searchParams = useSearchParams()
   const preferredPlanId = searchParams?.get('plan')
   const [loadingPlan, setLoadingPlan] = React.useState<string | null>(null)
+  const [purchaseError, setPurchaseError] = React.useState<string | null>(null)
 
   const TIERS = [
     {
@@ -42,10 +43,17 @@ function PurchaseContent() {
 
   const handlePurchase = async (priceId: string) => {
     setLoadingPlan(priceId)
+    setPurchaseError(null)
     try {
-      await createCheckoutSession(priceId)
-    } catch (error) {
-      console.error(error)
+      const result = await createCheckoutSession(priceId)
+      if (result && 'error' in result) {
+        setPurchaseError(result.error)
+        setLoadingPlan(null)
+      }
+    } catch {
+      // NEXT_REDIRECT throws — that means it succeeded
+      // Any real error:
+      setPurchaseError('Unexpected error. Please try again.')
       setLoadingPlan(null)
     }
   }
@@ -96,6 +104,9 @@ function PurchaseContent() {
               >
                  Finalize Membership <ArrowRight size={16} />
               </LoadingButton>
+              {purchaseError && (
+                <p className="text-[10px] font-bold text-red-600 text-center">{purchaseError}</p>
+              )}
 
               <button 
                 onClick={() => window.location.href = '/purchase'}

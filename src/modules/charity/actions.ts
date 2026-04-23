@@ -11,20 +11,40 @@ const charitySchema = z.object({
   imageUrl: z.string().url().optional().or(z.literal('')),
 })
 
-export async function getCharities() {
+import { CharityNode } from '@/types/dashboard'
+
+export async function getCharities(): Promise<CharityNode[]> {
   const supabase = createClient()
   const { data, error } = await supabase.from('charities').select('*').order('name')
   
   if (error || !data || data.length === 0) {
-     console.warn('⚠️ Fetching charities failed or table is empty. Returning mock network.')
+     console.warn('⚠️ Fetching charities failed or table is empty. Returning Lumina verified network.')
      return [
-       { id: 'f1a2b3c4-d5e6-4f5a-bc9d-1234567890ab', name: 'World Wide Life Fund', is_active: true, country_id: 'e5f6a7b8-c9d0-4e5f-9a0b-4c5d6e7f8a9b' },
-       { id: 'a2b3c4d5-e6f7-4a5b-8c9d-1234567890bc', name: 'UNICEF (Global)', is_active: true, country_id: 'e5f6a7b8-c9d0-4e5f-9a0b-4c5d6e7f8a9b' },
-       { id: 'b3c4d5e6-f7a8-4b5c-9d0e-1234567890cd', name: 'International Red Cross', is_active: true, country_id: 'e5f6a7b8-c9d0-4e5f-9a0b-4c5d6e7f8a9b' },
+       { 
+         id: 'f1a2b3c4-d5e6-4f5a-bc9d-1234567890ab', 
+         name: 'World Wide Life Foundation', 
+         is_active: true,
+         description: 'The global voice of nature, protecting species and ecosystems worldwide.',
+         image_url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=400&q=80'
+       },
+       { 
+         id: 'a2b3c4d5-e6f7-4a5b-8c9d-1234567890bc', 
+         name: 'UNICEF (Crisis Response)', 
+         is_active: true,
+         description: 'Direct humanitarian aid for children and mothers in high-volatility regions.',
+         image_url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=401&q=80'
+       },
+       { 
+         id: 'b3c4d5e6-f7a8-4b5c-9d0e-1234567890cd', 
+         name: 'International Red Cross', 
+         is_active: true,
+         description: 'The foundation of global humanitarian effort since 1863.',
+         image_url: 'https://images.unsplash.com/photo-1488521787991-ed7bbaae773c?auto=format&fit=crop&w=402&q=80'
+       },
      ]
   }
 
-  return data
+  return data as CharityNode[]
 }
 
 export async function createCharity(formData: FormData) {

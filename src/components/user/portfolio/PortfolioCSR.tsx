@@ -5,23 +5,10 @@ import { Sparkles, ArrowUpRight, Zap, Target, Globe, ChevronRight } from 'lucide
 import { useApi } from '@/lib/api-client'
 import { formatCurrency } from '@/lib/utils'
 
-interface PortfolioData {
-  totalWon?: number;
-  stats?: {
-    totalWon?: number;
-    totalLivesImpacted?: number;
-  };
-  ledger?: Array<{
-    partner_name?: string;
-    created_at: string;
-    amount?: number;
-    allocation_type?: string;
-    status?: string;
-  }>;
-}
+import { DashboardData } from '@/types/dashboard'
 
 export function PortfolioCSR() {
-   const { data, loading, error } = useApi<PortfolioData>('/user/dashboard')
+   const { data, loading, error } = useApi<DashboardData>('/user/dashboard')
 
   if (loading) {
     return (
@@ -38,7 +25,7 @@ export function PortfolioCSR() {
   if (error) return <p className="p-8 text-center text-red-500 font-bold">Failed to synchronize contribution ledger.</p>
 
   // Robust data mapping from the new API structure
-  const totalWon = data?.stats?.totalWon || data?.totalWon || 0
+  const totalWon = data?.stats?.totalWon || 0
   const livesImpacted = data?.stats?.totalLivesImpacted || 0
 
   return (

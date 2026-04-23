@@ -22,6 +22,10 @@ export interface Profile {
   charity_id: string | null;
   contribution_percentage: number;
   avatar_url: string | null;
+  bio: string | null;
+  comm_alerts: boolean;
+  comm_weekly: boolean;
+  comm_network: boolean;
   stripe_customer_id: string | null;
   created_at: string;
   updated_at: string;
