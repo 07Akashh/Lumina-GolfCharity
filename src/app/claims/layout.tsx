@@ -4,9 +4,9 @@ import Link from 'next/link'
 
 export default function ClaimsRootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <div className="flex flex-col h-screen bg-[#faf9f7] text-[#0a1628] font-inter overflow-hidden">
+    <div className="bg-[#faf9f7] text-[#0a1628] font-inter min-h-screen">
       {/* Global Claims Header - Matches DashboardLayout aesthetic */}
-      <header className="h-[72px] shrink-0 flex items-center justify-between px-10 bg-white border-b border-[#f4f3f1]/50 sticky top-0 z-50">
+      <header className="h-[72px] flex items-center justify-between px-10 bg-white/80 backdrop-blur-md border-b border-[#f4f3f1]/50 sticky top-0 z-[100]">
         <div className="flex items-center gap-8">
           <Link href="/user" className="flex items-center gap-2 text-[10px] font-black uppercase tracking-widest text-[#94a3b8] hover:text-[#c81e51] transition-colors group">
             <ArrowLeft size={16} className="group-hover:-translate-x-1 transition-transform" /> Dashboard
@@ -33,8 +33,7 @@ export default function ClaimsRootLayout({ children }: { children: React.ReactNo
         </div>
       </header>
 
-      {/* Main View Area - Full height, scrollable if needed in sub-layouts */}
-      <main className="flex-1 overflow-hidden">
+      <main className="relative">
         {children}
       </main>
     </div>

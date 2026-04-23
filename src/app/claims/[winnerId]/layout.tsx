@@ -2,7 +2,7 @@
 
 import React from 'react'
 import { Fingerprint, FileText, Landmark, Sparkles, ClipboardCheck, ShieldCheck } from 'lucide-react'
-import { useParams, usePathname } from 'next/navigation'
+import { usePathname } from 'next/navigation'
 
 const STEPS = [
   { id: 'identity', label: 'Identity', icon: Fingerprint },
@@ -13,13 +13,13 @@ const STEPS = [
 ]
 
 export default function ClaimLayout({ children }: { children: React.ReactNode }) {
-  const params = useParams()
+  // const params = useParams()
   const pathname = usePathname()
 
   return (
-    <div className="h-full flex overflow-hidden">
-      {/* Portal Sidebar */}
-      <aside className="w-[280px] bg-white border-r border-[#eceae7] flex flex-col py-10 px-8 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40">
+    <div className="flex relative items-start">
+      {/* Portal Sidebar - Sticky relative to the global layout scroll */}
+      <aside className="w-[280px] bg-white border-r border-[#eceae7] flex flex-col py-10 px-8 shrink-0 shadow-[4px_0_24px_rgba(0,0,0,0.02)] z-40 sticky top-[72px] h-[calc(100vh-72px)] overflow-y-auto custom-scrollbar">
         <div className="mb-10">
           <p className="text-[10px] font-black uppercase tracking-[0.3em] text-[#c81e51]">In Progress</p>
           <h2 className="text-xl font-black text-[#0a1628] leading-tight serif-i mt-1">Verification</h2>
@@ -64,7 +64,7 @@ export default function ClaimLayout({ children }: { children: React.ReactNode })
       </aside>
 
       {/* Portal Content Area */}
-      <main className="flex-1 overflow-y-auto px-16 py-12 custom-scrollbar">
+      <main className="flex-1 px-16 py-12">
         <div className="max-w-4xl mx-auto">
           {children}
         </div>

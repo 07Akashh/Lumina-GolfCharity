@@ -19,7 +19,7 @@ export default async function ClaimsGatewayPage() {
     .order('created_at', { ascending: false })
 
   return (
-    <div className="flex-1 overflow-y-auto px-12 py-16 scroll-smooth custom-scrollbar">
+    <div className="px-12 py-16 scroll-smooth">
       <div className="space-y-12 max-w-5xl mx-auto">
       <header className="space-y-4">
         <div className="flex items-center gap-3">
