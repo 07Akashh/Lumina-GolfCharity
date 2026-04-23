@@ -8,11 +8,15 @@ import { sendEmail } from '@/lib/resend'
 /**
  * Perform a weighted selection of 5 unique numbers based on frequency of user scores.
  */
-function weightedSelection(counts: Record<number, number>): number[] {
+function weightedSelection(counts: Record<number, number>, mode: 'most_frequent' | 'least_frequent' = 'most_frequent'): number[] {
   const numbers: number[] = []
-  const candidates = Object.entries(counts).map(([num, weight]) => ({
+  
+  // Calculate max frequency for inverse weighting
+  const maxFreq = Math.max(...Object.values(counts), 1)
+
+  const candidates = Object.entries(counts).map(([num, freq]) => ({
     num: parseInt(num),
-    weight: weight + 1 
+    weight: mode === 'most_frequent' ? (freq + 1) : (maxFreq - freq + 1)
   }))
 
   while (numbers.length < 5 && candidates.length > 0) {
@@ -37,7 +41,7 @@ function weightedSelection(counts: Record<number, number>): number[] {
   return numbers
 }
 
-export async function simulateDraw(type: 'random' | 'algorithmic') {
+export async function simulateDraw(type: 'random' | 'algorithmic', mode: 'most_frequent' | 'least_frequent' = 'most_frequent') {
   const supabase = createClient()
   const cutoff = new Date().toISOString()
 
@@ -48,7 +52,11 @@ export async function simulateDraw(type: 'random' | 'algorithmic') {
       if (!numbers.includes(n)) numbers.push(n)
     }
   } else {
-    const { data: scores } = await supabase.from('scores').select('value').lte('created_at', cutoff)
+    const { data: scores } = await supabase
+      .from('scores')
+      .select('value, profiles!inner(role)')
+      .eq('profiles.role', 'USER')
+      .lte('created_at', cutoff)
     if (!scores || scores.length < 5) {
       while (numbers.length < 5) {
         const n = Math.floor(Math.random() * 45) + 1
@@ -57,7 +65,7 @@ export async function simulateDraw(type: 'random' | 'algorithmic') {
     } else {
         const counts: Record<number, number> = {}
         scores.forEach(s => counts[s.value] = (counts[s.value] || 0) + 1)
-        numbers = weightedSelection(counts)
+        numbers = weightedSelection(counts, mode)
     }
   }
 
@@ -95,12 +103,12 @@ export async function simulateDraw(type: 'random' | 'algorithmic') {
   const totalPool = prizePoolContribution + rollover
   
   const draw: Partial<Draw> = {
-    type,
+    type: mode === 'least_frequent' ? 'algorithmic' : type, // Keep track of the logic used
     numbers,
     prize_pool_total: totalPool,
-    tier_5_pool: totalPool * 0.40, // Tier 1: 40%
-    tier_4_pool: totalPool * 0.35, // Tier 2: 35%
-    tier_3_pool: totalPool * 0.25, // Tier 3: 25%
+    tier_5_pool: totalPool * 0.40, // Tier 5 (5-match): 40%
+    tier_4_pool: totalPool * 0.35, // Tier 4 (4-match): 35%
+    tier_3_pool: totalPool * 0.25, // Tier 3 (3-match): 25%
     status: 'simulated',
     score_cutoff_at: new Date().toISOString()
   }

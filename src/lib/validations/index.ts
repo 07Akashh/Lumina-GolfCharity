@@ -27,7 +27,10 @@ export const resetPasswordSchema = z.object({
   path: ["confirmPassword"],
 })
 
-export const scoreSchema = z.number().int().min(1).max(45)
+export const scoreSchema = z.object({
+  value: z.number().int().min(1).max(45),
+  date: z.string().min(1),
+})
 
 export const charitySchema = z.object({
   name: z.string().min(2),

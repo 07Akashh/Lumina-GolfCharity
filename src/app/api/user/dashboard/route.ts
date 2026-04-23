@@ -1,5 +1,7 @@
-import { createClient } from '@/lib/supabase/server'
+import { createClient, createAdminClient } from '@/lib/supabase/server'
 import { NextResponse } from 'next/server'
+
+export const dynamic = 'force-dynamic'
 
 interface DrawParticipant {
   id: string
@@ -35,6 +37,15 @@ interface GlobalWinnerRecord extends WinnerRecord {
   } | null
 }
 
+interface TopWinnerAggregated {
+  user_id: string
+  full_name: string
+  total_amount: number | string
+  win_count: number
+  avg_score: number | string
+  latest_win: string
+}
+
 export async function GET() {
   const supabase = createClient()
   const { data: { user } } = await supabase.auth.getUser()
@@ -42,6 +53,8 @@ export async function GET() {
   if (!user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  const adminClient = createAdminClient()
 
   try {
     const [
@@ -58,8 +71,8 @@ export async function GET() {
       supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('winners').select('*, draws(*)').eq('user_id', user.id),
       supabase.from('charities').select('*').eq('is_active', true),
-      supabase.from('scores').select('*').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
-      supabase.from('winners').select('*, profiles(full_name, email), draws(*)').order('created_at', { ascending: false }).limit(5),
+      supabase.from('scores').select('*').eq('user_id', user.id).order('score_date', { ascending: false }).limit(5),
+      supabase.rpc('get_top_winners', { limit_val: 5 }),
       supabase.from('draw_participants').select('*, draws(numbers, published_at)').eq('user_id', user.id).order('created_at', { ascending: false }).limit(5),
       supabase.from('draws').select('published_at').eq('status', 'scheduled').order('published_at', { ascending: true }).limit(1).maybeSingle()
     ])
@@ -129,15 +142,14 @@ export async function GET() {
         user_numbers: h.numbers,
         date: h.draws?.published_at
       })),
-      topWinners: (globalWinners as GlobalWinnerRecord[] || []).map((w: GlobalWinnerRecord) => {
-        const profile = w.profiles
+      topWinners: (Array.isArray(globalWinners) ? globalWinners : []).map((w) => {
+        const fullName = w.full_name || 'Anonymous Node'
+        const hasWins = Number(w.total_amount || 0) > 0
         return {
-          name: profile?.full_name 
-              ? (profile.full_name.split(' ')[0] + ' ' + profile.full_name.split(' ')[1]?.charAt(0) + '.')
-              : 'Anonymous Node',
-          amount: w.prize_amount,
-          type: w.draws?.type || 'Standard',
-          date: w.created_at
+          name: fullName.trim().split(/\s+/)[0] + (fullName.trim().split(/\s+/)[1] ? ' ' + fullName.trim().split(/\s+/)[1].charAt(0) + '.' : ''),
+          amount: Number(w.total_amount || 0),
+          type: hasWins ? `${w.win_count} Wins • ${Number(w.avg_score).toFixed(1)} Avg` : `Active • ${Number(w.avg_score).toFixed(1)} Avg Score`,
+          date: w.latest_win || new Date().toISOString()
         }
       })
     })

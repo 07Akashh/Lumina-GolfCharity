@@ -47,6 +47,7 @@ export function NodeConsole({ scores }: NodeConsoleProps) {
 
 function ScoreModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void }) {
   const [value, setValue] = React.useState('')
+  const [date, setDate] = React.useState(new Date().toISOString().split('T')[0])
   const [loading, setLoading] = React.useState(false)
   const [error, setError] = React.useState<string | null>(null)
   const queryClient = useQueryClient()
@@ -59,7 +60,7 @@ function ScoreModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
     setError(null)
     
     try {
-      const result = await addScore(parseInt(value))
+      const result = await addScore(parseInt(value), date)
       if (result && 'error' in result) {
         setError(result.error as string)
       } else {
@@ -95,6 +96,18 @@ function ScoreModal({ isOpen, onClose }: { isOpen: boolean, onClose: () => void 
                className="w-full text-4xl font-black text-[#0a1628] border-b-2 border-[#f4f3f1] focus:border-[#c81e51] py-4 outline-none transition-all placeholder:opacity-10"
                placeholder="00"
                autoFocus
+            />
+         </div>
+
+         <div className="space-y-4">
+            <div className="flex justify-between items-end mb-2">
+               <label className="text-[10px] font-black uppercase tracking-widest text-[#94a3b8]">Score Date</label>
+            </div>
+            <input 
+               type="date"
+               value={date}
+               onChange={(e) => setDate(e.target.value)}
+               className="w-full text-lg font-black text-[#0a1628] border-b-2 border-[#f4f3f1] focus:border-[#c81e51] py-2 outline-none transition-all"
             />
          </div>
 

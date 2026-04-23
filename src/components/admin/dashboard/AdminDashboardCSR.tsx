@@ -169,8 +169,11 @@ export function OverviewTab({ stats, totalRevenue, estimatedDistributed, chariti
   estimatedDistributed: number;
   charities: Charity[];
 }) {
-  const [isClient, setIsClient] = React.useState(false)
-  React.useEffect(() => setIsClient(true), [])
+  const isClient = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   const formatDate = (dateStr: string) => {
     if (!isClient) return '...'
@@ -383,15 +386,22 @@ export function WinnersTab({ winners, kycRecords = [], claims = [] }: {
                 <p className="text-[11px] font-black uppercase tracking-widest text-[#94a3b8]">{winners.length} Epoch Winners</p>
              </div>
              <div className="grid gap-4">
-                {winners.map((w: (Winner & { profiles: Profile; draws: Draw })) => (
-                  <div key={w.id} className="p-8 bg-[#fafafc] rounded-[2.5rem] flex items-center justify-between border border-[#f4f3f1]">
-                     <div className="flex items-center gap-6">
-                        <Trophy size={28} className="text-[#c81e51]" />
-                        <div><p className="font-black text-[#0a1628]">{w.profiles?.full_name}</p><p className="text-[11px] font-bold text-[#94a3b8]">{w.draws?.type.toUpperCase()} Allocation</p></div>
-                     </div>
-                      <p className="text-2xl font-bold text-[#c81e51]">{formatCurrency(w.prize_amount)}</p>
-                  </div>
-                ))}
+                {winners.length === 0 ? (
+                  <EmptyNode label="No winning nodes detected in current epoch." />
+                ) : (
+                  winners.map((w: (Winner & { profiles: Profile; draws: Draw })) => (
+                    <div key={w.id} className="p-8 bg-[#fafafc] rounded-[2.5rem] flex items-center justify-between border border-[#f4f3f1]">
+                       <div className="flex items-center gap-6">
+                          <Trophy size={28} className="text-[#c81e51]" />
+                          <div>
+                            <p className="font-black text-[#0a1628]">{w.profiles?.full_name || 'Anonymous'}</p>
+                            <p className="text-[11px] font-bold text-[#94a3b8]">{w.draws?.type?.toUpperCase()} Allocation</p>
+                          </div>
+                       </div>
+                        <p className="text-2xl font-bold text-[#c81e51]">{formatCurrency(w.prize_amount)}</p>
+                    </div>
+                  ))
+                )}
              </div>
           </div>
         )}
@@ -469,8 +479,11 @@ function ProofLink({ label, url }: { label: string; url: string }) {
 // --- Algorithm & Draws Tab ---
 
 export function DrawsTab({ draws }: { draws: Draw[] }) {
-  const [isClient, setIsClient] = React.useState(false)
-  React.useEffect(() => setIsClient(true), [])
+  const isClient = React.useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false
+  )
 
   return (
     <div className="card-lumina p-12 bg-white border border-[#f4f3f1] shadow-2xl rounded-[3.5rem] space-y-10">

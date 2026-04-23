@@ -61,6 +61,7 @@ create table public.scores (
     id uuid default uuid_generate_v4() primary key,
     user_id uuid references public.profiles(id) on delete cascade not null,
     value integer not null check (value between 1 and 45),
+    score_date date default current_date not null,
     created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
 
@@ -248,17 +249,22 @@ create policy "Users can view other profiles names for leaderboard" on public.pr
 
 -- FUNCTIONS
 
--- Score rotation logic
-create or replace function public.add_score(score_val int)
+-- Score rotation logic (retains latest 5 based on date)
+create or replace function public.add_score(score_val int, score_date date)
 returns void as $$
 declare
   total_scores int;
 begin
   select count(*) into total_scores from public.scores where user_id = auth.uid();
   if total_scores >= 5 then
-    delete from public.scores where id in (select id from public.scores where user_id = auth.uid() order by created_at asc limit (total_scores - 4));
+    delete from public.scores where id in (
+      select id from public.scores 
+      where user_id = auth.uid() 
+      order by score_date asc, created_at asc 
+      limit (total_scores - 4)
+    );
   end if;
-  insert into public.scores (user_id, value) values (auth.uid(), score_val);
+  insert into public.scores (user_id, value, score_date) values (auth.uid(), score_val, score_date);
 end;
 $$ language plpgsql security definer;
 
@@ -273,7 +279,6 @@ declare
   d_tier_3_pool decimal;
   d_cutoff timestamp with time zone;
 begin
-  -- Lock the row and check status
   select status, numbers, tier_5_pool, tier_4_pool, tier_3_pool, score_cutoff_at
   into d_status, d_numbers, d_tier_5_pool, d_tier_4_pool, d_tier_3_pool, d_cutoff
   from public.draws where id = p_draw_id for update;
@@ -296,6 +301,7 @@ begin
   join public.scores s on s.user_id = p.id
   where s.value = any(d_numbers)
     and s.created_at <= d_cutoff
+    and p.role = 'USER'
   group by p.id
   having count(distinct s.value) >= 3;
 
@@ -320,12 +326,69 @@ begin
     winner_count_tier_3 = (select count(*) from tmp_winners where match_count = 3)
   where id = p_draw_id;
   
-  -- 4. RESET: Global Participation Reset
-  delete from public.scores;
+  -- 4. RESET: Global Participation Reset (DISABLED per PRD requirements to retain latest 5 scores)
+  -- delete from public.scores;
 
   drop table tmp_winners;
 end;
 $$ language plpgsql security definer;
+
+-- Cleanup: Purge existing Admin winners once and for all
+delete from public.winners where user_id in (select id from public.profiles where role = 'ADMIN');
+
+-- Firewall: Trigger to prevent any future Admin from winning
+create or replace function public.check_winner_eligibility()
+returns trigger as $$
+begin
+    if (select role from public.profiles where id = new.user_id) = 'ADMIN' then
+        raise exception 'Administrative accounts are barred from winning prizes.';
+    end if;
+    return new;
+end;
+$$ language plpgsql;
+
+create trigger winner_eligibility_gate
+before insert on public.winners
+for each row execute function public.check_winner_eligibility();
+
+-- Aggregated Leaderboard Function (Multi-metric Ranking)
+create or replace function public.get_top_winners(limit_val int default 5)
+returns table (
+  user_id uuid,
+  full_name text,
+  total_amount numeric,
+  win_count bigint,
+  avg_score numeric,
+  latest_win timestamp with time zone
+) as $$
+begin
+  return query
+  with user_wins as (
+    select w.user_id, sum(w.prize_amount) as total, count(w.id) as wins, max(w.created_at) as last_w
+    from public.winners w group by w.user_id
+  ),
+  user_scores as (
+    select s.user_id, avg(s.value) as average
+    from public.scores s group by s.user_id
+  )
+  select 
+    p.id as user_id,
+    coalesce(p.full_name, 'Anonymous Node')::text as full_name,
+    coalesce(uw.total, 0)::numeric as total_amount,
+    coalesce(uw.wins, 0)::bigint as win_count,
+    coalesce(us.average, 0)::numeric as avg_score,
+    uw.last_w as latest_win
+  from public.profiles p
+  left join user_wins uw on uw.user_id = p.id
+  left join user_scores us on us.user_id = p.id
+  where p.role = 'USER'
+  order by total_amount desc, avg_score desc
+  limit limit_val;
+end;
+$$ language plpgsql security definer;
+
+-- Ensure permissions are set
+grant execute on function public.get_top_winners(int) to anon, authenticated, service_role;
 
 -- Auto-profile trigger
 create or replace function public.handle_new_user()
