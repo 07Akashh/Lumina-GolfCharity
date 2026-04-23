@@ -1,11 +1,7 @@
 import { type NextRequest, NextResponse } from 'next/server'
 import { updateSession } from '@/lib/supabase/proxy'
-import { createServerClient, type CookieOptions } from '@supabase/ssr'
 
 const rateLimitMap = new Map<string, { count: number, reset: number }>()
-
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
-const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
 
 export async function proxy(request: NextRequest) {
   // 1. Rate Limiting
@@ -29,39 +25,13 @@ export async function proxy(request: NextRequest) {
   }
 
   // 2. Session Update & Auth Logic
-  let response = await updateSession(request)
-
-  const supabase = createServerClient(
-    supabaseUrl,
-    supabaseAnonKey,
-    {
-      cookies: {
-        get(name: string) {
-          return request.cookies.get(name)?.value
-        },
-        set(name: string, value: string, options: CookieOptions) {
-          request.cookies.set({ name, value, ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
-          response.cookies.set({ name, value, ...options })
-        },
-        remove(name: string, options: CookieOptions) {
-          request.cookies.set({ name, value: '', ...options })
-          response = NextResponse.next({ request: { headers: request.headers } })
-          response.cookies.set({ name, value: '', ...options })
-        },
-      },
-    }
-  )
-
-  const { data: { user } } = await supabase.auth.getUser()
+  const { response, user } = await updateSession(request)
 
   // 3. Routing & Protection Logic
   const isUserRoute = request.nextUrl.pathname.startsWith('/user')
   const isAdminRoute = request.nextUrl.pathname.startsWith('/admin')
   const isClaimsRoute = request.nextUrl.pathname.startsWith('/claims')
   const isPurchasePage = request.nextUrl.pathname.startsWith('/purchase')
-
-  console.log(`📡 [Proxy Entry] Path: ${request.nextUrl.pathname} | User: ${user?.email || 'Guest'}`)
 
   // Auth Protection (Basic Existence)
   if (!user && (isUserRoute || isAdminRoute || isPurchasePage || isClaimsRoute)) {
