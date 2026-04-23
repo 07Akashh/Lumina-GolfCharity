@@ -16,18 +16,17 @@ const TABS = [
 
 interface SettingsData {
   profile?: {
+    id?: string;
     full_name?: string;
     email?: string;
     avatar_url?: string;
     role?: string;
-    meta?: {
-      bio?: string;
-      phone?: string;
-      comm_alerts?: boolean;
-      comm_weekly?: boolean;
-      comm_network?: boolean;
-      charity_percent?: number;
-    };
+    bio?: string;
+    phone?: string;
+    contribution_percentage?: number;
+    comm_alerts?: boolean;
+    comm_weekly?: boolean;
+    comm_network?: boolean;
   };
   subscription?: {
     plan?: string;
@@ -40,41 +39,14 @@ export function SettingsCSR() {
   const [updating, setUpdating] = useState(false)
   const [msg, setMsg] = useState<{ type: 'success' | 'error', text: string } | null>(null)
   
-  // Real data state
-  const [formData, setFormData] = useState({
-    fullName: '',
-    bio: '',
-    phone: '',
-    commAlerts: true,
-    commWeekly: true,
-    commNetwork: false,
-    charityPercent: 10
-  })
-
-  useEffect(() => {
-    if (data?.profile) {
-      setFormData({
-        fullName: data.profile.full_name || '',
-        bio: data.profile.meta?.bio || '',
-        phone: data.profile.meta?.phone || '',
-        commAlerts: data.profile.meta?.comm_alerts ?? true,
-        commWeekly: data.profile.meta?.comm_weekly ?? true,
-        commNetwork: data.profile.meta?.comm_network ?? false,
-        charityPercent: data.profile.meta?.charity_percent ?? 10,
-      })
-    }
-  }, [data])
-
   useEffect(() => {
     const observer = new IntersectionObserver(
       (entries) => {
-        // Find the first intersecting entry
         const intersecting = entries.find(entry => entry.isIntersecting)
         if (intersecting) {
           setActiveTab(intersecting.target.id)
         }
       },
-      // Trigger when the section reaches 100px from the top of the viewport
       { threshold: 0, rootMargin: '-100px 0px -60% 0px' }
     )
 
@@ -95,31 +67,17 @@ export function SettingsCSR() {
   }
 
   if (loading) return <SettingsSkeleton />
-
   if (error) return <p className="p-8 text-center text-red-500 font-bold">Failed to synchronize governance node.</p>
 
   const profile = data?.profile
   const plan = data?.subscription?.plan || 'free'
 
-  const handleUpdateProfile = async (e?: React.FormEvent) => {
-    if (e) e.preventDefault()
+  const handleUpdate = async (formDataPayload: FormData) => {
     setUpdating(true)
     setMsg(null)
-    if (formData.charityPercent < 10 || formData.charityPercent > 100) {
-      return setMsg({ type: 'error', text: 'Stipulated foundation matching must natively fall between 10% and 100% bounds.' })
-    }
-
-    const fd = new FormData()
-    fd.append('fullName', formData.fullName)
-    fd.append('bio', formData.bio)
-    fd.append('phone', formData.phone)
-    fd.append('commAlerts', formData.commAlerts.toString())
-    fd.append('commWeekly', formData.commWeekly.toString())
-    fd.append('commNetwork', formData.commNetwork.toString())
-    fd.append('charityPercent', formData.charityPercent.toString())
     
     try {
-      const res = await updateProfile(fd)
+      const res = await updateProfile(formDataPayload)
       if (res?.error) {
         setMsg({ type: 'error', text: res.error })
       } else {
@@ -160,8 +118,8 @@ export function SettingsCSR() {
                          active ? 'bg-[#f4f3f1] text-[#0a1628]' : 'text-[#94a3b8] hover:bg-[#fafafc] hover:text-[#0a1628]'
                       }`}
                     >
-                      <span>{tab.label}</span>
-                      {active && <div className="w-1 h-1 rounded-full bg-[#c81e51]" />}
+                       <span>{tab.label}</span>
+                       {active && <div className="w-1 h-1 rounded-full bg-[#c81e51]" />}
                     </button>
                  )
               })}
@@ -181,79 +139,14 @@ export function SettingsCSR() {
 
          {/* Content Area */}
          <div className="lg:col-span-3 space-y-24 pb-40">
-            {/* Section 01: Profile Identity */}
-            <section id="profile" className="space-y-10 scroll-mt-20">
-               <SectionHeader index="01" title="Profile Identity" />
-               
-               <div className="flex items-center gap-8 border-b border-[#f4f3f1] pb-10">
-                  <div className="relative group">
-                     <div className="w-24 h-24 rounded-full overflow-hidden bg-[#f4f3f1] ring-4 ring-white shadow-xl relative">
-                        <Image fill src={profile?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'} alt="Avatar" className="object-cover" sizes="96px" />
-                     </div>
-                     <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#c81e51] text-white flex items-center justify-center border-4 border-white shadow-lg hover:scale-110 transition-transform">
-                        <Camera size={14} />
-                     </button>
-                  </div>
-                  <div>
-                     <h3 className="text-xl font-black text-[#0a1628] leading-tight">{profile?.full_name || 'Not Configured'}</h3>
-                     <p className="text-[12px] font-medium text-[#94a3b8] mt-1">{profile?.role || 'Member Node'} • Verified</p>
-                     <button className="text-[9px] font-black uppercase tracking-widest text-[#c81e51] mt-3 hover:underline underline-offset-4 decoration-dotted">Change Avatar</button>
-                  </div>
-               </div>
-               
-               <form id="profile-form" onSubmit={handleUpdateProfile} className="space-y-8">
-                  <div className="grid md:grid-cols-2 gap-8">
-                    <Field label="Legal Full Name">
-                       <input 
-                         name="fullName" 
-                         className="input-lumina w-full bg-[#fafafc] border-[#f4f3f1] focus:bg-white" 
-                         value={formData.fullName}
-                         onChange={(e) => setFormData({...formData, fullName: e.target.value})}
-                         placeholder="e.g. Alex Sterling" 
-                       />
-                    </Field>
-                    <Field label="Phone Contact (Optional)">
-                       <input 
-                         name="phone" 
-                         className="input-lumina w-full bg-[#fafafc] border-[#f4f3f1] focus:bg-white" 
-                         value={formData.phone}
-                         onChange={(e) => setFormData({...formData, phone: e.target.value})}
-                         placeholder="+1 (555) 000-0000" 
-                       />
-                    </Field>
-                  </div>
-                  
-                  <Field label="Foundation Allocation Ratio (%)">
-                     <p className="text-[10px] font-medium text-[#c81e51] mb-2 uppercase tracking-widest pl-1">Strict System Constraint: Minimum 10% Required</p>
-                     <input 
-                       name="charityPercent" 
-                       type="number"
-                       min="10"
-                       max="100"
-                       className="input-lumina w-full bg-[#fafafc] border-[#f4f3f1] focus:bg-white text-lg font-black" 
-                       value={formData.charityPercent}
-                       onChange={(e) => setFormData({...formData, charityPercent: parseInt(e.target.value) || 10})}
-                       placeholder="10" 
-                     />
-                  </Field>
-                  
-                  <Field label="Impact Bio">
-                    <textarea 
-                      name="bio"
-                      className="input-lumina w-full min-h-[120px] bg-[#fafafc] border-[#f4f3f1] focus:bg-white pt-5 resize-none leading-relaxed text-[13px]" 
-                      value={formData.bio}
-                      onChange={(e) => setFormData({...formData, bio: e.target.value})}
-                      placeholder="Brief description of your philanthropic mission..."
-                    />
-                  </Field>
-
-                  {msg && (
-                    <div className={`p-4 rounded-xl text-[11px] font-bold ${msg.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
-                      {msg.text}
-                    </div>
-                  )}
-               </form>
-            </section>
+            {/* USE KEY PATTERN TO INITIALIZE FORM WITHOUT EFFECTS */}
+            <ProfileIdentityForm 
+              key={profile?.id || 'empty'}
+              profile={profile} 
+              updating={updating}
+              msg={msg}
+              onUpdate={handleUpdate}
+            />
 
             {/* Section 02: Membership Tier */}
             <section id="tier" className="space-y-10 scroll-mt-20">
@@ -264,49 +157,156 @@ export function SettingsCSR() {
                   <TierCard label="Luminary" price="$1999" desc="Enterprise-grade philanthropic advisory." active={plan === 'luminary'} />
                </div>
             </section>
-
-            {/* Section 03: Communication */}
-            <section id="comm" className="space-y-10 scroll-mt-20">
-               <SectionHeader index="03" title="Communication Nodes" />
-               <div className="space-y-1">
-                  <ToggleItem 
-                    label="Global Impact Alerts" desc="Real-time notifications on significant humanitarian events." 
-                    checked={formData.commAlerts} onChange={(c) => setFormData({...formData, commAlerts: c})} 
-                  />
-                  <ToggleItem 
-                    label="Weekly Performance Ledger" desc="A curated summary of your legacy growth." 
-                    checked={formData.commWeekly} onChange={(c) => setFormData({...formData, commWeekly: c})} 
-                  />
-                  <ToggleItem 
-                    label="Network Node Invitations" desc="Exclusive alerts for localized philanthropic golf events." 
-                    checked={formData.commNetwork} onChange={(c) => setFormData({...formData, commNetwork: c})} 
-                  />
-               </div>
-            </section>
-
-            {/* Section 04: Security & Privacy */}
-            <section id="security" className="space-y-10 scroll-mt-20">
-               <SectionHeader index="04" title="Security & Privacy" />
-               <div className="grid md:grid-cols-2 gap-8">
-                  <SecurityCard icon={Smartphone} label="Two-Factor Node Access" desc="Authenticated login using mobile hardware keys." action="Enable MFA" />
-                  <SecurityCard icon={Fingerprint} label="Biometric Signature" desc="Signed ledger entries via Face/Touch ID." action="Active Node" highlight />
-               </div>
-               
-               <div className="p-8 bg-white border border-[#f4f3f1] rounded-[2rem] flex items-center justify-between">
-                  <div>
-                    <h4 className="text-[13px] font-black text-[#c81e51] uppercase tracking-wider">Danger Zone</h4>
-                    <p className="text-[11px] font-medium text-[#94a3b8] mt-1">Permanently prune your node from the network.</p>
-                  </div>
-                  <button className="px-6 py-2.5 rounded-xl border border-[#f4f3f1] text-[9px] font-black uppercase tracking-widest text-[#c81e51] hover:bg-[#c81e51] hover:text-white transition-all">Prune Node</button>
-               </div>
-            </section>
          </div>
       </div>
+    </div>
+  )
+}
 
-      {/* Floating Action Button */}
+function ProfileIdentityForm({ profile, updating, msg, onUpdate }: {
+  profile: SettingsData['profile'];
+  updating: boolean;
+  msg: { type: 'success' | 'error', text: string } | null;
+  onUpdate: (fd: FormData) => void;
+}) {
+  const [formData, setFormData] = useState({
+    fullName: profile?.full_name || '',
+    bio: profile?.bio || '',
+    phone: profile?.phone || '',
+    commAlerts: profile?.comm_alerts ?? true,
+    commWeekly: profile?.comm_weekly ?? true,
+    commNetwork: profile?.comm_network ?? false,
+    charityPercent: profile?.contribution_percentage ?? 10,
+  })
+
+  const handleSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault()
+    const fd = new FormData()
+    fd.append('fullName', formData.fullName)
+    fd.append('bio', formData.bio)
+    fd.append('phone', formData.phone)
+    fd.append('commAlerts', formData.commAlerts.toString())
+    fd.append('commWeekly', formData.commWeekly.toString())
+    fd.append('commNetwork', formData.commNetwork.toString())
+    fd.append('charityPercent', formData.charityPercent.toString())
+    onUpdate(fd)
+  }
+
+  return (
+    <div className="space-y-24">
+      <section id="profile" className="space-y-10 scroll-mt-20">
+        <SectionHeader index="01" title="Profile Identity" />
+        
+        <div className="flex items-center gap-8 border-b border-[#f4f3f1] pb-10">
+           <div className="relative group">
+              <div className="w-24 h-24 rounded-full overflow-hidden bg-[#f4f3f1] ring-4 ring-white shadow-xl relative">
+                 <Image fill src={profile?.avatar_url || 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80'} alt="Avatar" className="object-cover" sizes="96px" />
+              </div>
+              <button className="absolute bottom-0 right-0 w-8 h-8 rounded-full bg-[#c81e51] text-white flex items-center justify-center border-4 border-white shadow-lg hover:scale-110 transition-transform">
+                 <Camera size={14} />
+              </button>
+           </div>
+           <div>
+              <h3 className="text-xl font-black text-[#0a1628] leading-tight">{profile?.full_name || 'Not Configured'}</h3>
+              <p className="text-[12px] font-medium text-[#94a3b8] mt-1">{profile?.role || 'Member Node'} • Verified</p>
+              <button className="text-[9px] font-black uppercase tracking-widest text-[#c81e51] mt-3 hover:underline underline-offset-4 decoration-dotted">Change Avatar</button>
+           </div>
+        </div>
+        
+        <form id="profile-form" onSubmit={handleSubmit} className="space-y-8">
+           <div className="grid md:grid-cols-2 gap-8">
+             <Field label="Legal Full Name">
+                <input 
+                   name="fullName" 
+                   className="input-lumina w-full bg-[#fafafc] border-[#f4f3f1] focus:bg-white" 
+                   value={formData.fullName}
+                   onChange={(e) => setFormData({...formData, fullName: e.target.value})}
+                   placeholder="e.g. Alex Sterling" 
+                />
+             </Field>
+             <Field label="Phone Contact (Optional)">
+                <input 
+                   name="phone" 
+                   className="input-lumina w-full bg-[#fafafc] border-[#f4f3f1] focus:bg-white" 
+                   value={formData.phone}
+                   onChange={(e) => setFormData({...formData, phone: e.target.value})}
+                   placeholder="+1 (555) 000-0000" 
+                />
+             </Field>
+           </div>
+           
+           <Field label="Foundation Allocation Ratio (%)">
+              <p className="text-[10px] font-medium text-[#c81e51] mb-2 uppercase tracking-widest pl-1">Strict System Constraint: Minimum 10% Required</p>
+              <input 
+                name="charityPercent" 
+                type="number"
+                min="10"
+                max="100"
+                className="input-lumina w-full bg-[#fafafc] border-[#f4f3f1] focus:bg-white text-lg font-black" 
+                value={formData.charityPercent}
+                onChange={(e) => setFormData({...formData, charityPercent: parseInt(e.target.value) || 10})}
+                placeholder="10" 
+              />
+           </Field>
+           
+           <Field label="Impact Bio">
+             <textarea 
+               name="bio"
+               className="input-lumina w-full min-h-[120px] bg-[#fafafc] border-[#f4f3f1] focus:bg-white pt-5 resize-none leading-relaxed text-[13px]" 
+               value={formData.bio}
+               onChange={(e) => setFormData({...formData, bio: e.target.value})}
+               placeholder="Brief description of your philanthropic mission..."
+             />
+           </Field>
+
+           {msg && (
+             <div className={`p-4 rounded-xl text-[11px] font-bold ${msg.type === 'success' ? 'bg-green-50 text-green-600' : 'bg-red-50 text-red-600'}`}>
+               {msg.text}
+             </div>
+           )}
+        </form>
+      </section>
+
+      {/* Section 03: Communication */}
+      <section id="comm" className="space-y-10 scroll-mt-20">
+         <SectionHeader index="03" title="Communication Nodes" />
+         <div className="space-y-1">
+            <ToggleItem 
+              label="Global Impact Alerts" desc="Real-time notifications on significant humanitarian events." 
+              checked={formData.commAlerts} onChange={(c) => setFormData({...formData, commAlerts: c})} 
+            />
+            <ToggleItem 
+              label="Weekly Performance Ledger" desc="A curated summary of your legacy growth." 
+              checked={formData.commWeekly} onChange={(c) => setFormData({...formData, commWeekly: c})} 
+            />
+            <ToggleItem 
+              label="Network Node Invitations" desc="Exclusive alerts for localized philanthropic golf events." 
+              checked={formData.commNetwork} onChange={(c) => setFormData({...formData, commNetwork: c})} 
+            />
+         </div>
+      </section>
+
+      {/* Section 04: Security & Privacy */}
+      <section id="security" className="space-y-10 scroll-mt-20">
+         <SectionHeader index="04" title="Security & Privacy" />
+         <div className="grid md:grid-cols-2 gap-8">
+            <SecurityCard icon={Smartphone} label="Two-Factor Node Access" desc="Authenticated login using mobile hardware keys." action="Enable MFA" />
+            <SecurityCard icon={Fingerprint} label="Biometric Signature" desc="Signed ledger entries via Face/Touch ID." action="Active Node" highlight />
+         </div>
+         
+         <div className="p-8 bg-white border border-[#f4f3f1] rounded-[2rem] flex items-center justify-between">
+            <div>
+              <h4 className="text-[13px] font-black text-[#c81e51] uppercase tracking-wider">Danger Zone</h4>
+              <p className="text-[11px] font-medium text-[#94a3b8] mt-1">Permanently prune your node from the network.</p>
+            </div>
+            <button type="button" className="px-6 py-2.5 rounded-xl border border-[#f4f3f1] text-[9px] font-black uppercase tracking-widest text-[#c81e51] hover:bg-[#c81e51] hover:text-white transition-all">Prune Node</button>
+         </div>
+      </section>
+
+      {/* Floating Action Button within the form component scope */}
       <div className="fixed bottom-10 right-10 z-50">
          <button 
-           onClick={() => handleUpdateProfile()}
+           onClick={() => handleSubmit()}
            disabled={updating}
            className="group flex items-center gap-3 bg-[#c81e51] hover:bg-[#b01a47] text-white pl-6 pr-8 py-5 rounded-full text-[10px] font-black uppercase tracking-[0.3em] shadow-xl shadow-[#c81e51]/20 hover:-translate-y-1 transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed"
          >

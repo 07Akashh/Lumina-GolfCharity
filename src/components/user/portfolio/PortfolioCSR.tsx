@@ -8,7 +8,8 @@ import { formatCurrency } from '@/lib/utils'
 interface PortfolioData {
   totalWon?: number;
   stats?: {
-    total_lives_impacted?: number;
+    totalWon?: number;
+    totalLivesImpacted?: number;
   };
   ledger?: Array<{
     partner_name?: string;
@@ -20,7 +21,7 @@ interface PortfolioData {
 }
 
 export function PortfolioCSR() {
-  const { data, loading, error } = useApi<PortfolioData>('/user/dashboard')
+   const { data, loading, error } = useApi<PortfolioData>('/user/dashboard')
 
   if (loading) {
     return (
@@ -36,11 +37,13 @@ export function PortfolioCSR() {
 
   if (error) return <p className="p-8 text-center text-red-500 font-bold">Failed to synchronize contribution ledger.</p>
 
-  const totalWon = data?.totalWon || 0
+  // Robust data mapping from the new API structure
+  const totalWon = data?.stats?.totalWon || data?.totalWon || 0
+  const livesImpacted = data?.stats?.totalLivesImpacted || 0
 
   return (
     <div className="space-y-12 animate-in fade-in duration-1000">
-      {/* Header Section */}
+      {/* ... prev content ... */}
       <div className="max-w-2xl">
          <h1 className="display-xl text-[#0a1628] leading-tight">
             Philanthropy <br />
@@ -130,7 +133,7 @@ export function PortfolioCSR() {
          {[
            { label: 'TOTAL CONTRIBUTED', val: formatCurrency(totalWon) },
            { label: 'TAX DEDUCTIBLE', val: formatCurrency(totalWon * 0.8) },
-           { label: 'LIVES IMPACTED', val: `~${data?.stats?.total_lives_impacted || '0'}` },
+           { label: 'LIVES IMPACTED', val: `~${livesImpacted}` },
            { label: 'NEXT GRANT CYCLE', val: 'Calculating...', highlight: true },
          ].map(stat => (
             <div key={stat.label}>

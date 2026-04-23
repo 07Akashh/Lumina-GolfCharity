@@ -67,7 +67,7 @@ export async function GET() {
       { data: participantsHistory },
       { data: nextDraw }
     ] = await Promise.all([
-      supabase.from('profiles').select('*, charities:selected_charity_id(*)').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('*').eq('id', user.id).maybeSingle(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('winners').select('*, draws(*)').eq('user_id', user.id),
       supabase.from('charities').select('*').eq('is_active', true),
@@ -146,7 +146,7 @@ export async function GET() {
     }))
 
     // Construct Ledger from wins
-    const ledger = (personalWinnings as WinnerRecord[] || [])?.map((w: WinnerRecord) => ({
+    const ledger = (personalWinnings || []).map((w: WinnerRecord) => ({
       partner_name: 'Lumina Pool Distribution',
       created_at: w.created_at,
       amount: w.prize_amount,
@@ -154,19 +154,21 @@ export async function GET() {
       status: w.status?.toUpperCase() || 'PENDING'
     }))
 
-    const charityProfile = profile as unknown as (Profile & { charities: { name: string } | null });
+    // Define joined profile type for safe access
+    type JoinedProfile = { contribution_percentage?: number } & { charities?: { name: string } | null };
+    const pd = profile as JoinedProfile;
 
     return NextResponse.json({
       profile,
       subscription,
       totalWon,
-      charities: [charityProfile?.charities].filter(Boolean),
+      charities: [pd?.charities].filter(Boolean),
       stats: {
         totalWon,
-        totalDonated: totalWon * (profile?.contribution_percentage || 10) / 100,
+        totalDonated: totalWon * (pd?.contribution_percentage || 10) / 100,
         activeSubs: 1,
-        charityName: charityProfile?.charities?.name || 'Global Fund',
-        selectedCharity: charityProfile?.charities,
+        charityName: pd?.charities?.name || 'Global Fund',
+        selectedCharity: pd?.charities,
         totalLivesImpacted
       },
       scores: scores?.map(s => s.value) || [],

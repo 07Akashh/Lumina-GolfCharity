@@ -176,14 +176,25 @@ export async function updateProfile(formData: FormData) {
       id: user.id,
       email: user.email,
       full_name: fullName || user.email?.split('@')[0],
-      role: 'USER'
+      role: 'USER',
+      phone: phone || null,
+      contribution_percentage: charityPercent
     })
   } else {
-    // Normal update
-    const updates: Record<string, unknown> = {
-      updated_at: new Date().toISOString()
+    // Normal update - strictly mapped to database columns
+    const updates: {
+      full_name?: string;
+      phone?: string;
+      contribution_percentage?: number;
+      updated_at: string;
+      bio?: string;
+    } = {
+      updated_at: new Date().toISOString(),
+      full_name: fullName,
+      phone: phone || undefined,
+      contribution_percentage: charityPercent,
+      bio: bio || undefined
     }
-    if (fullName) updates.full_name = fullName
 
     await supabase.from('profiles').update(updates).eq('id', user.id)
   }

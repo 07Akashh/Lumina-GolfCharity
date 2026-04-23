@@ -9,7 +9,8 @@ import { formatCurrency } from '@/lib/utils'
 interface MetricsData {
   totalWon?: number;
   stats?: {
-    total_lives_impacted?: number;
+    totalWon?: number;
+    totalLivesImpacted?: number;
   };
   chartData?: Array<{ year: string; val: string; active?: boolean }>;
   grants?: Array<{
@@ -55,7 +56,8 @@ export function MetricsCSR() {
     )
   }
 
-  const totalWon = data?.totalWon || 0
+  const totalWon = data?.stats?.totalWon || data?.totalWon || 0
+  const livesImpacted = data?.stats?.totalLivesImpacted || 0
 
   return (
     <div className="space-y-16 animate-in fade-in duration-1000">
@@ -73,7 +75,7 @@ export function MetricsCSR() {
          <div className="flex gap-4">
             <div className="card-lumina p-6 bg-[#f4f3f1]/50 border-white/5 rounded-[2rem] min-w-[170px]">
                <p className="text-[9px] font-black uppercase tracking-widest text-[#8a8f9e] mb-2 leading-none">TOTAL LIVES <br /> IMPACTED</p>
-               <p className="text-2xl font-black text-[#0a1628] leading-none">{data?.stats?.total_lives_impacted || '0'}</p>
+               <p className="text-2xl font-black text-[#0a1628] leading-none">{livesImpacted}</p>
             </div>
             <div className="card-lumina p-6 !bg-[#003731] border-white/10 rounded-[2rem] min-w-[190px] text-white">
                <p className="text-[9px] font-black uppercase tracking-widest text-white/50 mb-2 leading-none">GLOBAL <br /> GRANTS</p>

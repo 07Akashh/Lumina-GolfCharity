@@ -22,7 +22,15 @@ interface DashboardData {
     contribution_percentage?: number;
   };
   stats?: {
-    total_lives_impacted?: number;
+    totalWon?: number;
+    totalLivesImpacted?: number;
+    charityName?: string;
+    selectedCharity?: {
+      id: string;
+      name: string;
+      description?: string;
+      image_url?: string;
+    };
   };
   winnings?: Array<{
     id: string;
@@ -60,6 +68,8 @@ export function UserDashboardCSR() {
   const { data, isLoading: loading, error } = useApiQuery<DashboardData>('/user/dashboard')
   const setUserMeta = useUserStore(s => s.setUserMeta)
 
+  console.log('--- DASHBOARD DATA DEBUG ---', data)
+
   React.useEffect(() => {
     if (data?.profile) {
       setUserMeta({
@@ -67,7 +77,7 @@ export function UserDashboardCSR() {
         role: 'MEMBER',
         avatar: (data.profile as { avatar_url?: string }).avatar_url,
         isActive: true, // If they are in the dashboard, they're active
-        livesImpacted: data.stats?.total_lives_impacted
+        livesImpacted: data.stats?.totalLivesImpacted
       })
     }
   }, [data, setUserMeta])
