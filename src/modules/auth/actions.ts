@@ -177,31 +177,32 @@ export async function updateProfile(formData: FormData) {
       contribution_percentage: charityPercent
     })
   } else {
-    // Normal update - strictly mapped to database columns
-    const updates: {
-      full_name?: string;
-      phone?: string;
-      contribution_percentage?: number;
-      updated_at: string;
-      bio?: string;
-    } = {
-      updated_at: new Date().toISOString(),
-      full_name: fullName,
-      phone: phone || undefined,
-      contribution_percentage: charityPercent
-    }
+    // Normal update — write all confirmed columns
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({
+        full_name: fullName,
+        phone: phone || null,
+        contribution_percentage: charityPercent,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', user.id)
 
-    // Attempt DB update
-    const { error: updateError } = await supabase.from('profiles').update(updates).eq('id', user.id)
     if (updateError) {
-      console.warn('⚠️ Standard Profile Update Warning (expected if columns missing):', updateError.message)
-      // We continue because we already saved the crucial bits to Auth Metadata above
+      console.warn('⚠️ Core profile update warning:', updateError.message)
     }
 
-    // Try updating bio separately so it doesn't block the whole save if column is missing
-    if (bio) {
-      await supabase.from('profiles').update({ bio }).eq('id', user.id)
-    }
+    // Write optional columns separately — gracefully fails if columns don't exist yet
+    await supabase.from('profiles').update({ bio: bio || null }).eq('id', user.id).then(
+      ({ error }) => { if (error) console.warn('⚠️ bio column missing:', error.message) }
+    )
+    await supabase.from('profiles').update({
+      comm_alerts: commAlerts,
+      comm_weekly: commWeekly,
+      comm_network: commNetwork,
+    }).eq('id', user.id).then(
+      ({ error }) => { if (error) console.warn('⚠️ comm columns missing:', error.message) }
+    )
   }
 
   // SYNC COOKIE

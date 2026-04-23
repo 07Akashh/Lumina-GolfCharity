@@ -32,7 +32,7 @@ export async function GET() {
       { data: nextDraw },
       { data: authUser }
     ] = await Promise.all([
-      supabase.from('profiles').select('*, charities:selected_charity_id(*)').eq('id', user.id).maybeSingle(),
+      supabase.from('profiles').select('*, charities:charity_id(*)').eq('id', user.id).maybeSingle(),
       supabase.from('subscriptions').select('*').eq('user_id', user.id).maybeSingle(),
       supabase.from('winners').select('*, draws(*)').eq('user_id', user.id),
       supabase.from('charities').select('*').eq('is_active', true).limit(5),
@@ -43,8 +43,13 @@ export async function GET() {
     ])
 
     // 2. Profile Normalization (Identity Fallback for Bio/Phone/Comms)
+    // full_name fallback: DB → Auth metadata → email prefix
     const profile = {
       ...profileRaw,
+      full_name: profileRaw?.full_name 
+        || authUser?.user?.user_metadata?.full_name 
+        || authUser?.user?.email?.split('@')[0] 
+        || null,
       bio: profileRaw?.bio || authUser?.user?.user_metadata?.bio || '',
       phone: profileRaw?.phone || authUser?.user?.user_metadata?.phone || '',
       comm_alerts: profileRaw?.comm_alerts ?? true,

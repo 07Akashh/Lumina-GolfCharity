@@ -37,10 +37,10 @@ export async function updateSelectedCharity(charityId: string) {
   if (!user) throw new Error('Unauthorized Operation Access.')
 
   try {
-    // Corrected to selected_charity_id to match database schema
+    // Update charity_id to match database schema
     const { error } = await supabase
       .from('profiles')
-      .update({ selected_charity_id: charityId })
+      .update({ charity_id: charityId })
       .eq('id', user.id)
 
     if (error) {
